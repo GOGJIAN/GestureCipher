@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PointGroup">
+        <attr name="count" format="integer"/>
+        <attr name="color_no_finger" format="color"/>
+        <attr name="color_finger_on_center" format="color"/>
+        <attr name="color_finger_on_background" format="color"/>
+        <attr name="color_incorrect_center" format="color"/>
+        <attr name="color_incorrect_background" format="color"/>
+    </declare-styleable>
+</resources>
