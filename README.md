@@ -10,6 +10,6 @@ allprojects {
 
 ```
 dependencies {
-	        implementation 'com.github.GOGJIAN:GestureCipher:1.0'
+	        implementation 'com.github.GOGJIAN:GestureCipher:1.1'
 	}
 ```
