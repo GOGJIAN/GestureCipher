@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.RelativeLayout;
 
@@ -39,7 +40,12 @@ public class PointGroup extends RelativeLayout {
     private float mLastX;
     private float mLastY;
     private boolean mDrawTempFlag = true;
+    private boolean mCleared;
     private StateListener mStateListener;
+    private int mRetryTimes = 5;
+    private int mRetryTemp = mRetryTimes;
+    ScheduledExecutorService mScheduledExecutorService = new ScheduledThreadPoolExecutor(1,
+            new BasicThreadFactory.Builder().namingPattern("example-schedule-pool-%d").daemon(true).build());
 
     public PointGroup(Context context) {
         super(context);
@@ -126,6 +132,7 @@ public class PointGroup extends RelativeLayout {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 reset();
+                mCleared = true;
                 break;
             case MotionEvent.ACTION_MOVE:
                 PointView cv = getChildByPos(x, y);
@@ -148,34 +155,45 @@ public class PointGroup extends RelativeLayout {
                 break;
             case MotionEvent.ACTION_UP:
                 mDrawTempFlag = false;
-                if(!checkAnswer()){
+                mRetryTemp--;
+                if(mRetryTemp<=0){
                     mPaint.setColor(mIncorrectCenterColor);
                     for (int i : mChoose) {
-                        mPointViewArray[i-1].setMode(PointView.Mode.STATUS_INCORRECT);
+                        mPointViewArray[i - 1].setMode(PointView.Mode.STATUS_INCORRECT);
                     }
-                    ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1,
-                            new BasicThreadFactory.Builder().namingPattern("example-schedule-pool-%d").daemon(true).build());
-                    scheduledExecutorService.schedule(new Runnable() {
-                        @Override
-                        public void run() {
-                            post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    reset();
-                                    invalidate();
-                                }
-                            });
+                    mStateListener.onMaxRetryTimes();
+                }else {
+                    if (!checkAnswer()) {
+                        mPaint.setColor(mIncorrectCenterColor);
+                        for (int i : mChoose) {
+                            mPointViewArray[i - 1].setMode(PointView.Mode.STATUS_INCORRECT);
                         }
-                    }, 1 , TimeUnit.SECONDS);
-                    if(mStateListener!=null){
-                        mStateListener.onIncorrect();
-                    }
+                        if (mStateListener != null) {
+                            mStateListener.onIncorrect();
+                        }
 
-                }else{
-                    if(mStateListener!=null){
-                        mStateListener.onCorrect();
+                    } else {
+                        if (mStateListener != null) {
+                            mStateListener.onCorrect();
+                        }
                     }
                 }
+                mCleared = false;
+                mScheduledExecutorService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        post(new Runnable() {
+                            @Override
+                            public void run() {
+                                reset();
+                                invalidate();
+                            }
+                        });
+                    }
+                }, 1, TimeUnit.SECONDS);
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                Log.d("AAA", "onTouchEvent: ");
                 break;
             default:
                 break;
@@ -206,13 +224,24 @@ public class PointGroup extends RelativeLayout {
     }
 
     private void reset() {
-        mDrawTempFlag = true;
-        mPath.reset();
-        mPaint.setColor(mFingerOnCenterColor);
-        mChoose.clear();
-        for (PointView pv : mPointViewArray) {
-            pv.setMode(PointView.Mode.STATUS_NO_FINGER);
+        if(!mCleared) {
+            mDrawTempFlag = true;
+            mPath.reset();
+            mPaint.setColor(mFingerOnCenterColor);
+            mChoose.clear();
+            for (PointView pv : mPointViewArray) {
+                pv.setMode(PointView.Mode.STATUS_NO_FINGER);
+            }
         }
+    }
+
+    public void resetRetry(){
+        mRetryTemp = mRetryTimes;
+    }
+
+    public void setRetryTimes(int times){
+        this.mRetryTimes = times;
+        this.mRetryTemp = times;
     }
 
     public void setAnswer(int[] answer) {
@@ -226,5 +255,6 @@ public class PointGroup extends RelativeLayout {
     public interface StateListener{
         void onCorrect();
         void onIncorrect();
+        void onMaxRetryTimes();
     }
 }

@@ -51,6 +51,11 @@ public class MainActivity extends AppCompatActivity {
             public void onIncorrect() {
 
             }
+
+            @Override
+            public void onMaxRetryTimes() {
+
+            }
         });
 //        mTextView = findViewById(R.id.text);
 //        mTextView.setOnClickListener(new View.OnClickListener() {
