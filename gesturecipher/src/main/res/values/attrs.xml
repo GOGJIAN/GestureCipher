@@ -2,6 +2,7 @@
 <resources>
     <declare-styleable name="PointGroup">
         <attr name="count" format="integer"/>
+        <attr name="line_width" format="integer"/>
         <attr name="color_no_finger" format="color"/>
         <attr name="color_finger_on_center" format="color"/>
         <attr name="color_finger_on_background" format="color"/>

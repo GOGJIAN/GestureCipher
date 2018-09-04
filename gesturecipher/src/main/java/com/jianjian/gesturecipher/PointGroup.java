@@ -18,6 +18,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+/**
+ *
+ */
 public class PointGroup extends RelativeLayout {
     private PointView[] mPointViewArray;
     private float mWidth;
@@ -25,6 +28,7 @@ public class PointGroup extends RelativeLayout {
     private int mPointViewWidth;
     private int mPointViewMargin;
     private int mCount;
+    private int mLineWidth;
     private int mCountSum;
     private int mNoFingerColor = 0xFFD8D8D8;
     private int mFingerOnCenterColor = 0xFF6aa0ff;
@@ -55,6 +59,7 @@ public class PointGroup extends RelativeLayout {
         super(context, attrs);
         TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.PointGroup);
         mCount = array.getInteger(R.styleable.PointGroup_count, 3);
+        mLineWidth = array.getInteger(R.styleable.PointGroup_line_width, 20);
         mNoFingerColor = array.getColor(R.styleable.PointGroup_color_no_finger, mNoFingerColor);
         mFingerOnCenterColor = array.getColor(R.styleable.PointGroup_color_finger_on_center, mFingerOnCenterColor);
         mFingerOnBackgroundColor = array.getColor(R.styleable.PointGroup_color_finger_on_background, mFingerOnBackgroundColor);
@@ -77,7 +82,7 @@ public class PointGroup extends RelativeLayout {
         mCountSum = mCount * 9 - 4;
         mPointViewWidth = (int) (mWidth / mCountSum * 5f);
         mPointViewMargin = (int) (mWidth / mCountSum * 4f);
-        mPaint.setStrokeWidth(mPointViewWidth / 10f);
+        mPaint.setStrokeWidth(mPointViewWidth / mLineWidth);
         if (mPointViewArray == null) {
             mPointViewArray = new PointView[mCount * mCount];
             for (int i = 0; i < mPointViewArray.length; i++) {
@@ -173,6 +178,10 @@ public class PointGroup extends RelativeLayout {
                         }
 
                     } else {
+                        mPaint.setColor(mFingerOnCenterColor);
+                        for (int i : mChoose) {
+                            mPointViewArray[i - 1].setMode(PointView.Mode.STATUS_FINGER_ON);
+                        }
                         if (mStateListener != null) {
                             mStateListener.onCorrect();
                         }
@@ -193,7 +202,7 @@ public class PointGroup extends RelativeLayout {
                 }, 1, TimeUnit.SECONDS);
                 break;
             case MotionEvent.ACTION_CANCEL:
-                Log.d("AAA", "onTouchEvent: ");
+                Log.d("AAA", "onTouchEvent: CANCEL");
                 break;
             default:
                 break;
